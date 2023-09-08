@@ -1,4 +1,5 @@
- import React, { Component } from 'react';
+import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchTrendingMovies } from '../api';
 
 class Home extends Component {
@@ -21,10 +22,14 @@ class Home extends Component {
 
     return (
       <div>
-        <h1>Trending Movies</h1>
+        <h1>Trending today</h1>
         <ul>
           {trendingMovies.map((movie) => (
-            <li key={movie.id}>{movie.title}</li>
+            <li key={movie.id}>
+              <Link to={`/movies/${movie.id}`}>
+                {movie.title}
+              </Link>
+            </li>
           ))}
         </ul>
       </div>

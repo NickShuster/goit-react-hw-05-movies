@@ -29,7 +29,7 @@ class Movies extends Component {
 
     return (
       <div>
-        <h1>Search Movies</h1>
+        
         <form onSubmit={this.handleSubmit}>
           <input
             type="text"
@@ -52,3 +52,4 @@ class Movies extends Component {
 }
 
 export default Movies;  
+

@@ -1,53 +1,89 @@
-import React, { Component, lazy, Suspense } from 'react';
-import { fetchMovieDetails } from '../api';
-import { Link, Route, Routes } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate, Outlet } from 'react-router-dom';
+import { fetchMovieDetails, fetchMovieReviews } from '../api';
 
-const Cast = lazy(() => import('../Cast/Cast.jsx'));
-const Reviews = lazy(() => import('../Reviews/Reviews.jsx'));
+function MovieDetails() {
+  const { movieId } = useParams();
+  const [movieDetails, setMovieDetails] = useState({});
+  const [castVisible, setCastVisible] = useState(false);
+  const [reviewsVisible, setReviewsVisible] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const navigate = useNavigate();
 
-class MovieDetails extends Component {
-  state = {
-    movieDetails: {},
-  };
-
-  componentDidMount() {
-    const { movieId } = this.props.match.params;
-
+  useEffect(() => {
     fetchMovieDetails(movieId)
       .then((movieDetails) => {
-        this.setState({ movieDetails });
+        setMovieDetails(movieDetails);
       })
       .catch((error) => {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching movie details:', error);
       });
-  }
 
-  render() {
-    const { movieDetails } = this.state;
-    const { match } = this.props;
+    if (reviewsVisible) {
+      fetchMovieReviews(movieId)
+        .then((reviews) => {
+          setReviews(reviews);
+        })
+        .catch((error) => {
+          console.error('Error fetching reviews:', error);
+        });
+    }
+  }, [movieId, reviewsVisible]);
 
-    return (
-      <div>
-        <h1>{movieDetails.title}</h1>
-        <p>{movieDetails.overview}</p>
-        <ul>
-          <li>
-            <Link to={`${match.url}/cast`}>Cast</Link>
-          </li>
-          <li>
-            <Link to={`${match.url}/reviews`}>Reviews</Link>
-          </li>
-        </ul>
+  const posterUrl = `https://image.tmdb.org/t/p/w500/${movieDetails.poster_path}`;
 
-        <Suspense fallback={<div>Loading...</div>}>
-          <Routes>
-            <Route path={`${match.path}/cast`} element={<Cast />} />
-            <Route path={`${match.path}/reviews`} element={<Reviews />} />
-          </Routes>
-        </Suspense>
-      </div>
-    );
-  }
+  const toggleCastVisibility = () => {
+    setCastVisible((prevState) => !prevState);
+  };
+
+  const toggleReviewsVisibility = () => {
+    setReviewsVisible((prevState) => !prevState);
+  };
+
+  return (
+    <div>
+      <button onClick={() => navigate('/')}>Go Back</button>
+      <h1>{movieDetails.title}</h1>
+      <img src={posterUrl} alt={movieDetails.title} />
+      <p>{movieDetails.overview}</p>
+      <ul>
+        <li>
+          <Link
+            to={`/movies/${movieId}/cast`}
+            onClick={toggleCastVisibility}
+          >
+            Cast
+          </Link>
+        </li>
+        <li>
+          <Link
+            to={`/movies/${movieId}/reviews`}
+            onClick={toggleReviewsVisibility}
+          >
+            Reviews
+          </Link>
+        </li>
+      </ul>
+
+      {castVisible && <Outlet />}
+
+     
+      {reviewsVisible ? (
+        reviews.length > 0 ? (
+          <ul>
+            {reviews.map((review) => (
+              <li key={review.id}>
+                <p>Author: {review.author}</p>
+                <p>{review.content}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>We don't have any reviews for this movie.</p>
+        )
+      ) : null}
+    </div>
+  );
 }
 
 export default MovieDetails;

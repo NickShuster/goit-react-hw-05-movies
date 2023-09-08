@@ -13,3 +13,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.header-item {
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: 20px;
+  text-transform: uppercase;
+  text-decoration: underline;
+}
+
+ul {
+  list-style: none;
+  padding-left: 0;
+}
+.header-item:visited {
+  color: blue;
+}
