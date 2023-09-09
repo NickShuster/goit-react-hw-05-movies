@@ -1,40 +1,37 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchTrendingMovies } from '../api';
 
-class Home extends Component {
-  state = {
-    trendingMovies: [],
-  };
+function Home() {
+  const [trendingMovies, setTrendingMovies] = useState([]);
 
-  componentDidMount() {
-    fetchTrendingMovies()
-      .then((trendingMovies) => {
-        this.setState({ trendingMovies });
-      })
-      .catch((error) => {
+  useEffect(() => {
+    const getTrendingMovies = async () => {
+      try {
+        const movies = await fetchTrendingMovies();
+        setTrendingMovies(movies);
+      } catch (error) {
         console.error('Error fetching data:', error);
-      });
-  }
+      }
+    };
 
-  render() {
-    const { trendingMovies } = this.state;
+    getTrendingMovies();
+  }, []);
 
-    return (
-      <div>
-        <h1>Trending today</h1>
-        <ul>
-          {trendingMovies.map((movie) => (
-            <li key={movie.id}>
-              <Link to={`/movies/${movie.id}`}>
-                {movie.title}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <h1>Trending today</h1>
+      <ul>
+        {trendingMovies.map((movie) => (
+          <li key={movie.id}>
+            <Link to={`/movies/${movie.id}`}>
+              {movie.title}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default Home;

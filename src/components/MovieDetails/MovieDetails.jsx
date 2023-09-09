@@ -1,65 +1,70 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate, Outlet } from 'react-router-dom';
+import { useParams, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { fetchMovieDetails, fetchMovieReviews } from '../api';
 
-function MovieDetails() {
+function MovieDetails({ clearSearch }) {
   const { movieId } = useParams();
   const [movieDetails, setMovieDetails] = useState({});
   const [castVisible, setCastVisible] = useState(false);
   const [reviewsVisible, setReviewsVisible] = useState(false);
   const [reviews, setReviews] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    fetchMovieDetails(movieId)
-      .then((movieDetails) => {
-        setMovieDetails(movieDetails);
-      })
-      .catch((error) => {
-        console.error('Error fetching movie details:', error);
-      });
+    clearSearch();
 
-    if (reviewsVisible) {
-      fetchMovieReviews(movieId)
-        .then((reviews) => {
-          setReviews(reviews);
-        })
-        .catch((error) => {
-          console.error('Error fetching reviews:', error);
-        });
+    const fetchData = async () => {
+      try {
+        const movieData = await fetchMovieDetails(movieId);
+        setMovieDetails(movieData);
+
+        const movieReviews = await fetchMovieReviews(movieId);
+        setReviews(movieReviews);
+      } catch (error) {
+        console.error('Помилка під час завантаження даних:', error);
+      }
+    };
+
+    fetchData();
+  }, [movieId, clearSearch]);
+
+  const posterUrl = movieDetails.poster_path
+    ? `https://image.tmdb.org/t/p/w500/${movieDetails.poster_path}`
+    : '';
+
+  const goBack = () => {
+    if (location.state && location.state.from) {
+      navigate(location.state.from);
+    } else {
+      navigate(-1);
     }
-  }, [movieId, reviewsVisible]);
-
-  const posterUrl = `https://image.tmdb.org/t/p/w500/${movieDetails.poster_path}`;
+  };
 
   const toggleCastVisibility = () => {
     setCastVisible((prevState) => !prevState);
+    setReviewsVisible(false); 
   };
 
   const toggleReviewsVisibility = () => {
     setReviewsVisible((prevState) => !prevState);
+    setCastVisible(false); 
   };
 
   return (
     <div>
-      <button onClick={() => navigate('/')}>Go Back</button>
+      <button onClick={goBack}>Go back</button>
       <h1>{movieDetails.title}</h1>
-      <img src={posterUrl} alt={movieDetails.title} />
+      {posterUrl && <img src={posterUrl} alt={movieDetails.title} />}
       <p>{movieDetails.overview}</p>
       <ul>
         <li>
-          <Link
-            to={`/movies/${movieId}/cast`}
-            onClick={toggleCastVisibility}
-          >
+          <Link to={`/movies/${movieId}/cast`} onClick={toggleCastVisibility}>
             Cast
           </Link>
         </li>
         <li>
-          <Link
-            to={`/movies/${movieId}/reviews`}
-            onClick={toggleReviewsVisibility}
-          >
+          <Link to={`/movies/${movieId}/reviews`} onClick={toggleReviewsVisibility}>
             Reviews
           </Link>
         </li>
@@ -67,9 +72,8 @@ function MovieDetails() {
 
       {castVisible && <Outlet />}
 
-     
-      {reviewsVisible ? (
-        reviews.length > 0 ? (
+      {reviewsVisible && (
+        <div>
           <ul>
             {reviews.map((review) => (
               <li key={review.id}>
@@ -78,10 +82,8 @@ function MovieDetails() {
               </li>
             ))}
           </ul>
-        ) : (
-          <p>We don't have any reviews for this movie.</p>
-        )
-      ) : null}
+        </div>
+      )}
     </div>
   );
 }

@@ -7,13 +7,16 @@ function Cast() {
   const [cast, setCast] = useState([]);
 
   useEffect(() => {
-    fetchMovieCredits(movieId)
-      .then((cast) => {
-        setCast(cast);
-      })
-      .catch((error) => {
+    const getMovieCredits = async () => {
+      try {
+        const castData = await fetchMovieCredits(movieId);
+        setCast(castData);
+      } catch (error) {
         console.error('Error fetching data:', error);
-      });
+      }
+    };
+
+    getMovieCredits();
   }, [movieId]);
 
   return (

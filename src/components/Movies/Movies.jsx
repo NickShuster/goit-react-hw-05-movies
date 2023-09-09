@@ -1,55 +1,55 @@
-  import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { searchMovies } from '../api';
 import { Link } from 'react-router-dom';
 
-class Movies extends Component {
-  state = {
-    query: '',
-    searchResults: [],
+function Movies() {
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+
+  useEffect(() => {
+    const storedSearchResults = JSON.parse(localStorage.getItem('searchResults'));
+    if (storedSearchResults) {
+      setSearchResults(storedSearchResults);
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    setQuery(e.target.value);
   };
 
-  handleChange = (e) => {
-    this.setState({ query: e.target.value });
-  };
-
-  handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    searchMovies(this.state.query)
-      .then((searchResults) => {
-        this.setState({ searchResults });
+    searchMovies(query)
+      .then((results) => {
+        localStorage.setItem('searchResults', JSON.stringify(results));
+        setSearchResults(results);
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
   };
 
-  render() {
-    const { query, searchResults } = this.state;
-
-    return (
-      <div>
-        
-        <form onSubmit={this.handleSubmit}>
-          <input
-            type="text"
-            value={query}
-            onChange={this.handleChange}
-            placeholder="Search for a movie..."
-          />
-          <button type="submit">Search</button>
-        </form>
-        <ul>
-          {searchResults.map((movie) => (
-            <li key={movie.id}>
-              <Link to={`/movies/${movie.id}`}>{movie.title}</Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={query}
+          onChange={handleChange}
+          placeholder="Search for a movie..."
+        />
+        <button type="submit">Search</button>
+      </form>
+      <ul>
+        {searchResults.map((movie) => (
+          <li key={movie.id}>
+            <Link to={`/movies/${movie.id}`}>{movie.title}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default Movies;  
-
+export default Movies;

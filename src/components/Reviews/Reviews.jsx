@@ -1,44 +1,41 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { fetchMovieReviews } from '../api';
 
-class Reviews extends Component {
-  state = {
-    reviews: [],
-  };
+function Reviews() {
+  const { movieId } = useParams();
+  const [reviews, setReviews] = useState([]);
 
-  componentDidMount() {
-    const { movieId } = this.props.match.params;
-
-    fetchMovieReviews(movieId)
-      .then((reviews) => {
-        this.setState({ reviews });
-      })
-      .catch((error) => {
+  useEffect(() => {
+    const getMovieReviews = async () => {
+      try {
+        const reviewsData = await fetchMovieReviews(movieId);
+        setReviews(reviewsData);
+      } catch (error) {
         console.error('Error fetching data:', error);
-      });
-  }
+      }
+    };
 
-  render() {
-    const { reviews } = this.state;
+    getMovieReviews();
+  }, [movieId]);
 
-    return (
-      <div>
-        <h2>Reviews</h2>
-        {reviews.length > 0 ? (
-          <ul>
-            {reviews.map((review) => (
-              <li key={review.id}>
-                <h3>{review.author}</h3>
-                <p>{review.content}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No reviews available</p>
-        )}
-      </div>
-    );
-  }
+  return (
+    <div>
+      <h2>Reviews</h2>
+      {reviews.length > 0 ? (
+        <ul>
+          {reviews.map((review) => (
+            <li key={review.id}>
+              <h3>{review.author}</h3>
+              <p>{review.content}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No reviews available</p>
+      )}
+    </div>
+  );
 }
 
 export default Reviews;
