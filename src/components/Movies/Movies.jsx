@@ -1,52 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { searchMovies } from '../api';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchTrendingMovies, searchMovies } from '../api';
 
 function Movies() {
-  const [query, setQuery] = useState('');
+  const [movies, setMovies] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    const storedSearchResults = JSON.parse(localStorage.getItem('searchResults'));
-    if (storedSearchResults) {
-      setSearchResults(storedSearchResults);
-    }
+    const fetchData = async () => {
+      try {
+        const trendingMovies = await fetchTrendingMovies();
+        setMovies(trendingMovies);
+      } catch (error) {
+        console.error('Помилка під час завантаження популярних фільмів:', error);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const handleChange = (e) => {
-    setQuery(e.target.value);
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    searchMovies(query)
-      .then((results) => {
-        localStorage.setItem('searchResults', JSON.stringify(results));
-        setSearchResults(results);
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
+  const handleSearch = async () => {
+    try {
+      const results = await searchMovies(searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Помилка під час пошуку фільмів:', error);
+    }
   };
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      <div>
         <input
           type="text"
-          value={query}
-          onChange={handleChange}
-          placeholder="Search for a movie..."
+          placeholder="Search for movies..."
+          value={searchQuery}
+          onChange={handleSearchChange}
         />
-        <button type="submit">Search</button>
-      </form>
+        <button onClick={handleSearch}>Search</button>
+      </div>
       <ul>
-        {searchResults.map((movie) => (
-          <li key={movie.id}>
-            <Link to={`/movies/${movie.id}`}>{movie.title}</Link>
-          </li>
-        ))}
+        {searchResults.length > 0
+          ? searchResults.map((movie) => (
+              <li key={movie.id}>
+                <Link to={`/movies/${movie.id}?fromMovies=true`}>
+                  {movie.title}
+                </Link>
+              </li>
+            ))
+          : movies.map((movie) => (
+              <li key={movie.id}>
+                <Link to={`/movies/${movie.id}?fromMovies=true`}>
+                  {movie.title}
+                </Link>
+              </li>
+            ))}
       </ul>
     </div>
   );
